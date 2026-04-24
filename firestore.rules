@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
+    // RBAC - We use get() because claims aren't available
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function isAdmin() { return isSignedIn() && getUserData().role == 'admin'; }
+    function isCoach() { return isSignedIn() && getUserData().role == 'coach'; }
+    function isParent() { return isSignedIn() && getUserData().role == 'parent'; }
+
+    // --- Validations ---
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'name', 'role']) &&
+             data.uid is string && data.uid == request.auth.uid &&
+             data.email is string && data.email.size() <= 100 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.role in ['admin', 'coach', 'parent'];
+    }
+
+    function isValidStudent(data) {
+      return data.keys().hasAll(['name', 'dob', 'ageCategory', 'parentId']) &&
+             data.name is string && data.name.size() <= 100 &&
+             data.dob is string &&
+             data.ageCategory is string &&
+             data.parentId is string && isValidId(data.parentId);
+    }
+
+    function isValidCoach(data) {
+      return data.keys().hasAll(['name', 'license']) &&
+             data.name is string && data.name.size() <= 100 &&
+             data.license is string && data.license.size() <= 100;
+    }
+
+    function isValidAssessment(data) {
+      return data.keys().hasAll(['studentId', 'technique', 'physical', 'tactics', 'date']) &&
+             data.studentId is string && isValidId(data.studentId) &&
+             data.technique is number && data.technique >= 0 && data.technique <= 100 &&
+             data.physical is number && data.physical >= 0 && data.physical <= 100 &&
+             data.tactics is number && data.tactics >= 0 && data.tactics <= 100;
+    }
+
+    // --- Collection Routes ---
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming()) && incoming().role == 'parent';
+      allow update: if (isAdmin() || (isSignedIn() && request.auth.uid == userId)) && 
+                    incoming().diff(existing()).affectedKeys().hasOnly(['name', 'photoUrl', 'phone']);
+    }
+
+    match /students/{studentId} {
+      allow read: if isAdmin() || isCoach() || (isParent() && resource.data.parentId == request.auth.uid);
+      allow create: if (isAdmin() || (isParent() && incoming().parentId == request.auth.uid)) && isValidStudent(incoming());
+      allow update: if isAdmin() || (isParent() && existing().parentId == request.auth.uid && incoming().parentId == existing().parentId && isValidStudent(incoming()));
+      allow delete: if isAdmin();
+    }
+
+    match /coaches/{coachId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /schedules/{scheduleId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /attendance/{attendanceId} {
+      allow read: if isAdmin() || isCoach() || (isParent() && get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.parentId == request.auth.uid);
+      allow write: if isAdmin() || isCoach();
+    }
+
+    match /assessments/{assessmentId} {
+      allow read: if isAdmin() || isCoach() || (isParent() && get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.parentId == request.auth.uid);
+      allow write: if isAdmin() || isCoach();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isAdmin() || (isParent() && get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.parentId == request.auth.uid);
+      allow create, update: if isAdmin();
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /matches/{matchId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

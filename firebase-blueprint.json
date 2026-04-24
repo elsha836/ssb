@@ -1,0 +1,131 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile data",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "coach", "parent"] },
+        "photoUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "name", "role"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Student data",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "dob": { "type": "string", "format": "date" },
+        "ageCategory": { "type": "string" },
+        "position": { "type": "string" },
+        "address": { "type": "string" },
+        "parentId": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "dob", "ageCategory", "parentId"]
+    },
+    "Coach": {
+      "title": "Coach",
+      "description": "Coach data",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "license": { "type": "string" },
+        "experience": { "type": "string" },
+        "contact": { "type": "string" },
+        "assignedCategories": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "license"]
+    },
+    "Schedule": {
+      "title": "Schedule",
+      "description": "Training schedule",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "day": { "type": "string" },
+        "time": { "type": "string" },
+        "location": { "type": "string" },
+        "ageCategory": { "type": "string" },
+        "coachId": { "type": "string" }
+      },
+      "required": ["day", "time", "location", "ageCategory"]
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Daily attendance record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "scheduleId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["hadir", "izin", "sakit", "alfa"] }
+      },
+      "required": ["studentId", "scheduleId", "date", "status"]
+    },
+    "Assessment": {
+      "title": "Assessment",
+      "description": "Student performance evaluation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "coachId": { "type": "string" },
+        "technique": { "type": "number" },
+        "physical": { "type": "number" },
+        "tactics": { "type": "number" },
+        "notes": { "type": "string" },
+        "date": { "type": "string", "format": "date" }
+      },
+      "required": ["studentId", "technique", "physical", "tactics", "date"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "SPP/Monthly fee record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "amount": { "type": "number" },
+        "month": { "type": "string" },
+        "year": { "type": "number" },
+        "status": { "type": "string", "enum": ["lunas", "belum"] },
+        "date": { "type": "string", "format": "date" }
+      },
+      "required": ["studentId", "amount", "month", "year", "status"]
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "description": "School news and notices",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "authorId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content"]
+    }
+  },
+  "firestore": {
+    "users": { "schema": "User", "description": "User profiles" },
+    "students": { "schema": "Student", "description": "Student list" },
+    "coaches": { "schema": "Coach", "description": "Coach list" },
+    "schedules": { "schema": "Schedule", "description": "Training schedules" },
+    "attendance": { "schema": "Attendance", "description": "Attendance records" },
+    "assessments": { "schema": "Assessment", "description": "Performance assessments" },
+    "payments": { "schema": "Payment", "description": "Payment records" },
+    "announcements": { "schema": "Announcement", "description": "Announcements" }
+  }
+}
