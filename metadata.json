@@ -1,13 +1,9 @@
 {
-  "name": "SSB Pro - Manajemen Sekolah Sepak Bola",
+  "name": "ASSBI Pro - Manajemen Sekolah Sepak Bola",
   "description": "Sistem manajemen lengkap untuk Sekolah Sepak Bola (SSB) meliputi data siswa, pelatih, jadwal latihan, absensi, penilaian performa, dan manajemen pembayaran.",
   "requestFramePermissions": [
     "camera",
     "microphone"
   ],
-  "majorCapabilities": [
-    "Real-time Data",
-    "Analytics",
-    "Role-based Access"
-  ]
+  "majorCapabilities": []
 }
